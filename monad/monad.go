@@ -20,7 +20,6 @@ type BindFunc func(interface{}) Monad
 // Monad represents a generic monad
 type Monad interface {
 	AndThen(func(interface{}) Monad) Monad
-	LogAndThen(func(interface{}) Monad, func(interface{})) Monad
 	Return(i interface{}) Monad
 }
 

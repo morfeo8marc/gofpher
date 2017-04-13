@@ -17,8 +17,9 @@ package either
 import (
 	"errors"
 	"fmt"
+	"reflect"
 
-	"github.com/asteris-llc/gofpher/monad"
+	"github.com/rebeccaskinner/gofpher/monad"
 )
 
 // LeftType represents the left-hand side of an Either
@@ -164,4 +165,38 @@ func FromRight(e Either) (interface{}, bool) {
 		return right.Val, true
 	}
 	return nil, false
+}
+
+func WrapEither(f interface{}) func(interface{}) monad.Monad {
+	errF := func(s string) func(interface{}) monad.Monad {
+		return func(interface{}) monad.Monad {
+			return LeftM(errors.New(s))
+		}
+	}
+	t := reflect.TypeOf(f)
+	if t.Kind() != reflect.Func {
+		return errF(fmt.Sprintf("expected function but got %T", f))
+	}
+
+	if t.NumIn() != 1 {
+		return errF(fmt.Sprintf("function should have input arity of 1"))
+	}
+
+	if t.NumOut() != 2 {
+		return errF(fmt.Sprintf("function should have an output arity of 2"))
+	}
+
+	errorType := reflect.TypeOf((*error)(nil)).Elem()
+
+	if !t.Out(1).Implements(errorType) {
+		return errF(fmt.Sprintf("function's second return value should be an error"))
+	}
+
+	return func(i interface{}) monad.Monad {
+		res := reflect.ValueOf(f).Call([]reflect.Value{reflect.ValueOf(i)})
+		if res[1].IsNil() {
+			return RightM(res[0].Interface())
+		}
+		return LeftM(res[1].Interface().(error))
+	}
 }
