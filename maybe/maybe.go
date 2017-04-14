@@ -17,7 +17,7 @@ package maybe
 import (
 	"fmt"
 
-	"github.com/asteris-llc/gofpher/monad"
+	"github.com/rebeccaskinner/gofpher/monad"
 )
 
 // Just is a plain value

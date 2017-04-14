@@ -17,8 +17,8 @@ package either_test
 import (
 	"fmt"
 
-	"github.com/asteris-llc/gofpher/either"
-	"github.com/asteris-llc/gofpher/monad"
+	"github.com/rebeccaskinner/gofpher/either"
+	"github.com/rebeccaskinner/gofpher/monad"
 )
 
 func toNum(i interface{}) either.EitherM {

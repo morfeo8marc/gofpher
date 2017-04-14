@@ -17,9 +17,9 @@ package executor
 import (
 	"fmt"
 
-	"github.com/asteris-llc/gofpher/either"
-	"github.com/asteris-llc/gofpher/list"
-	"github.com/asteris-llc/gofpher/monad"
+	"github.com/rebeccaskinner/gofpher/either"
+	"github.com/rebeccaskinner/gofpher/list"
+	"github.com/rebeccaskinner/gofpher/monad"
 )
 
 // Pipeline is a type alias for a lazy list of pipeline functions
