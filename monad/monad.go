@@ -14,6 +14,8 @@
 
 package monad
 
+import "reflect"
+
 // BindFunc is a function type used for Bind
 type BindFunc func(interface{}) Monad
 
@@ -29,14 +31,6 @@ type MPlus interface {
 	MZero() Monad
 }
 
-// FMap applies a function inside of a monadic value
-func FMap(f func(interface{}) interface{}, m Monad) Monad {
-	fmap := func(i interface{}) Monad {
-		return m.Return(f(i))
-	}
-	return m.AndThen(fmap)
-}
-
 // Join takes a Monad (Monad (interface{})) and returns Monad (interface{})
 func Join(m Monad) Monad {
 	return m.AndThen(func(i interface{}) Monad { return i.(Monad) })
@@ -45,4 +39,13 @@ func Join(m Monad) Monad {
 // Kleisli composition for monadic functions
 func Kleisli(a, b func(i interface{}) Monad) func(i interface{}) Monad {
 	return func(i interface{}) Monad { return b(i).AndThen(a) }
+}
+
+// FMap :: (a -> b) -> m a -> m b; it will panic if f is not a func with
+// a single input and a single output
+func FMap(f interface{}, m Monad) Monad {
+	return m.AndThen(func(i interface{}) Monad {
+		v := reflect.ValueOf(f).Call([]reflect.Value{reflect.ValueOf(i)})
+		return m.Return(v[0].Interface())
+	})
 }
