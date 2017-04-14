@@ -50,6 +50,10 @@ func (m Maybe) LogAndThen(f func(interface{}) monad.Monad, logger func(interface
 	return m
 }
 
+func (m Maybe) LiftM(f interface{}) monad.Monad {
+	return monad.FMap(f, m)
+}
+
 // Return provides the monadic implementation of Return
 func (m Maybe) Return(i interface{}) monad.Monad {
 	return Maybe{internal: just{Val: i}}

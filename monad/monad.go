@@ -23,6 +23,7 @@ type BindFunc func(interface{}) Monad
 type Monad interface {
 	AndThen(func(interface{}) Monad) Monad
 	Return(i interface{}) Monad
+	LiftM(f interface{}) Monad
 }
 
 // MPlus defines the interface for the MonadPlus class

@@ -200,3 +200,7 @@ func WrapEither(f interface{}) func(interface{}) monad.Monad {
 		return LeftM(res[1].Interface().(error))
 	}
 }
+
+func (e EitherM) LiftM(f interface{}) monad.Monad {
+	return monad.FMap(f, e)
+}
