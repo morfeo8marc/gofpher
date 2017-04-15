@@ -16,6 +16,7 @@ package maybe
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/rebeccaskinner/gofpher/monad"
 )
@@ -52,6 +53,54 @@ func (m Maybe) LogAndThen(f func(interface{}) monad.Monad, logger func(interface
 
 func (m Maybe) LiftM(f interface{}) monad.Monad {
 	return monad.FMap(f, m)
+}
+
+func (m Maybe) Next(fnc interface{}) monad.Monad {
+	f := reflect.ValueOf(fnc)
+	if f.Type().Kind() != reflect.Func {
+		return Nothing()
+	}
+	if f.Type().NumOut() == 1 {
+		return m.LiftM(fnc)
+	}
+	if f.Type().NumOut() == 2 {
+		return m.AndThen(WrapMaybe(fnc))
+	}
+	return Nothing()
+}
+
+func WrapMaybe(f interface{}) func(interface{}) monad.Monad {
+	errF := func(s string) func(interface{}) monad.Monad {
+		return func(interface{}) monad.Monad {
+			return Nothing()
+		}
+	}
+	t := reflect.TypeOf(f)
+	if t.Kind() != reflect.Func {
+		return errF(fmt.Sprintf("expected function but got %T", f))
+	}
+
+	if t.NumIn() != 1 {
+		return errF(fmt.Sprintf("function should have input arity of 1"))
+	}
+
+	if t.NumOut() != 2 {
+		return errF(fmt.Sprintf("function should have an output arity of 2"))
+	}
+
+	errorType := reflect.TypeOf((*error)(nil)).Elem()
+
+	if !t.Out(1).Implements(errorType) {
+		return errF(fmt.Sprintf("function's second return value should be an error"))
+	}
+
+	return func(i interface{}) monad.Monad {
+		res := reflect.ValueOf(f).Call([]reflect.Value{reflect.ValueOf(i)})
+		if res[1].IsNil() {
+			return Just(res[0].Interface())
+		}
+		return Nothing()
+	}
 }
 
 // Return provides the monadic implementation of Return

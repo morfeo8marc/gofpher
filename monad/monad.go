@@ -24,6 +24,7 @@ type Monad interface {
 	AndThen(func(interface{}) Monad) Monad
 	Return(i interface{}) Monad
 	LiftM(f interface{}) Monad
+	Next(f interface{}) Monad
 }
 
 // MPlus defines the interface for the MonadPlus class
@@ -46,7 +47,13 @@ func Kleisli(a, b func(i interface{}) Monad) func(i interface{}) Monad {
 // a single input and a single output
 func FMap(f interface{}, m Monad) Monad {
 	return m.AndThen(func(i interface{}) Monad {
-		v := reflect.ValueOf(f).Call([]reflect.Value{reflect.ValueOf(i)})
+		var input reflect.Value
+		if _, ok := i.(reflect.Value); ok {
+			input = i.(reflect.Value)
+		} else {
+			input = reflect.ValueOf(i)
+		}
+		v := reflect.ValueOf(f).Call([]reflect.Value{input})
 		return m.Return(v[0].Interface())
 	})
 }

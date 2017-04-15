@@ -167,6 +167,20 @@ func FromRight(e Either) (interface{}, bool) {
 	return nil, false
 }
 
+func (e EitherM) Next(fnc interface{}) monad.Monad {
+	f := reflect.ValueOf(fnc)
+	if f.Type().Kind() != reflect.Func {
+		return LeftM(errors.New("Next only works with functions"))
+	}
+	if f.Type().NumOut() == 1 {
+		return e.LiftM(fnc)
+	}
+	if f.Type().NumOut() == 2 {
+		return e.AndThen(WrapEither(fnc))
+	}
+	return LeftM(errors.New("Next only works with functions of input arity 1 and output arity 1 or 2"))
+}
+
 func WrapEither(f interface{}) func(interface{}) monad.Monad {
 	errF := func(s string) func(interface{}) monad.Monad {
 		return func(interface{}) monad.Monad {
